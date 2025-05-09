@@ -1,176 +1,207 @@
 local p = game.Players.LocalPlayer
+local g = Instance.new("ScreenGui", p:WaitForChild("PlayerGui"))
+g.Name, g.ResetOnSpawn = "BroysGUI", false
 
-local function makeGUI()
-	local g = Instance.new("ScreenGui", p:WaitForChild("PlayerGui"))
-	g.Name = "BroysGUI" g.ResetOnSpawn = false
+local f = Instance.new("Frame", g)
+f.Size = UDim2.new(0, 300, 0, 100)
+f.Position = UDim2.new(0.5, -150, 0.5, -200)
+f.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Instance.new("UICorner", f).CornerRadius = UDim.new(0, 10)
 
-	local f = Instance.new("Frame", g)
-	f.Size = UDim2.new(0, 300, 0, 500)
-	f.Position = UDim2.new(0.5, -150, 0.5, -250)
-	f.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	f.Active, f.Draggable = true, true
-	Instance.new("UICorner", f).CornerRadius = UDim.new(0, 10)
-
-	local fullSize = UDim2.new(0, 300, 0, 500)
-	local minimizedSize = UDim2.new(0, 300, 0, 40)
-	local minimized = false
-
-	local t = Instance.new("TextLabel", f)
-	t.Size = UDim2.new(1, 0, 0, 30)
-	t.Text = "Broys Script"
-	t.Font = Enum.Font.GothamBold t.TextSize = 20 t.TextColor3 = Color3.new(1,1,1)
-	t.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	Instance.new("UICorner", t).CornerRadius = UDim.new(0, 10)
-
-	local x = Instance.new("TextButton", f)
-	x.Size = UDim2.new(0, 30, 0, 30)
-	x.Position = UDim2.new(1, -35, 0, 5)
-	x.Text = "X" x.Font = Enum.Font.GothamBold x.TextSize = 20
-	x.BackgroundColor3 = Color3.new(1,1,1) x.TextColor3 = Color3.new(0,0,0)
-	Instance.new("UICorner", x).CornerRadius = UDim.new(0, 8)
-	x.MouseButton1Click:Connect(function() g:Destroy() end)
-
-	local minimizeButton = Instance.new("TextButton", f)
-	minimizeButton.Size = UDim2.new(0, 30, 0, 30)
-	minimizeButton.Position = UDim2.new(1, -70, 0, 5)
-	minimizeButton.Text = "-" 
-	minimizeButton.Font = Enum.Font.GothamBold
-	minimizeButton.TextSize = 20
-	minimizeButton.BackgroundColor3 = Color3.new(1,1,1)
-	minimizeButton.TextColor3 = Color3.new(0,0,0)
-	Instance.new("UICorner", minimizeButton).CornerRadius = UDim.new(0, 8)
-
-	local sections = {}
-
-	minimizeButton.MouseButton1Click:Connect(function()
-		minimized = not minimized
-		if minimized then
-			f:TweenSize(minimizedSize, "Out", "Quad", 0.25, true)
-			for _, sec in ipairs(sections) do
-				sec.Visible = false
-			end
-		else
-			f:TweenSize(fullSize, "Out", "Quad", 0.25, true)
-			for _, sec in ipairs(sections) do
-				sec.Visible = true
-			end
-		end
-	end)
-
-	local char = p.Character or p.CharacterAdded:Wait()
-	local h = char:WaitForChild("Humanoid")
-
-	local function createSection(name, order)
-		local sectionFrame = Instance.new("Frame", f)
-		sectionFrame.Size = UDim2.new(1, 0, 0, 30)
-		sectionFrame.Position = UDim2.new(0, 0, 0, 40 + order * 200)
-		sectionFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-
-		table.insert(sections, sectionFrame)
-
-		local title = Instance.new("TextButton", sectionFrame)
-		title.Size = UDim2.new(1, 0, 1, 0)
-		title.Text = name
-		title.Font = Enum.Font.GothamBold
-		title.TextSize = 16
-		title.TextColor3 = Color3.fromRGB(255, 255, 255)
-		title.BackgroundTransparency = 1
-
-		local content = Instance.new("Frame", sectionFrame)
-		content.Position = UDim2.new(0, 0, 1, 0)
-		content.Size = UDim2.new(1, 0, 0, 0)
-		content.BackgroundTransparency = 1
-		content.ClipsDescendants = true
-
-		local layout = Instance.new("UIListLayout", content)
-		layout.Padding = UDim.new(0, 5)
-
-		local open = false
-		title.MouseButton1Click:Connect(function()
-			open = not open
-			content:TweenSize(UDim2.new(1, 0, 0, open and #content:GetChildren()*35 or 0), "Out", "Quad", 0.3, true)
-		end)
-
-		local function addButton(txt, callback)
-			local b = Instance.new("TextButton", content)
-			b.Size = UDim2.new(1, -20, 0, 30)
-			b.Text = txt
-			b.Font = Enum.Font.GothamBold
-			b.TextSize = 16
-			b.TextColor3 = Color3.new(1, 1, 1)
-			b.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-			b.AutoButtonColor = false
-			Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
-			b.MouseEnter:Connect(function() b.BackgroundColor3 = Color3.fromRGB(80, 80, 80) end)
-			b.MouseLeave:Connect(function() b.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end)
-			b.MouseButton1Click:Connect(callback)
-		end
-
-		return addButton
-	end
-
-	local function teleportTo(name)
-		local root = char:WaitForChild("HumanoidRootPart")
-		local best, dist = nil, math.huge
-		for _, v in pairs(workspace:GetDescendants()) do
-			if v:IsA("BasePart") and v.Name == name then
-				local d = (v.Position - root.Position).Magnitude
-				if d < dist then best, dist = v, d end
-			end
-		end
-		if best then root.CFrame = CFrame.new(best.Position + Vector3.new(0, 3, 0)) end
-	end
-
-	local function teleportWeapons()
-		local w, root = workspace:FindFirstChild("Weapons"), char:FindFirstChild("HumanoidRootPart")
-		if w and root then
-			local best, dist = nil, math.huge
-			for _, m in pairs(w:GetChildren()) do
-				if m:IsA("Model") and m.PrimaryPart then
-					local d = (m.PrimaryPart.Position - root.Position).Magnitude
-					if d < dist then best, dist = m, d end
-				end
-			end
-			if best then root.CFrame = CFrame.new(best.PrimaryPart.Position + Vector3.new(0,3,0)) end
-		end
-	end
-
-	local spinning = false
-	game:GetService("RunService").RenderStepped:Connect(function()
-		if spinning then
-			local hrp = char:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				hrp.CFrame *= CFrame.Angles(0, math.rad(35), 0)
-			end
-		end
-	end)
-
-	local function fovZoom()
-		local cam, UIS = workspace.CurrentCamera, game:GetService("UserInputService")
-		local norm, zoom = 70, 200 local toggle = false
-		UIS.InputBegan:Connect(function(input, gpe)
-			if not gpe and input.KeyCode == Enum.KeyCode.Z then
-				toggle = not toggle
-				cam.FieldOfView = toggle and zoom or norm
-			end
+-- Перетаскивание
+local uis = game:GetService("UserInputService")
+local dragging, dragStart, startPos
+f.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = i.Position
+		startPos = f.Position
+		i.Changed:Connect(function()
+			if i.UserInputState == Enum.UserInputState.End then dragging = false end
 		end)
 	end
+end)
+uis.InputChanged:Connect(function(i)
+	if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = i.Position - dragStart
+		f.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
 
-	local addBunker = createSection("Bunker", 0)
-	addBunker("Teleport to Beans", function() teleportTo("Beans") end)
-	addBunker("Teleport to Bloxy Cola", function() teleportTo("Bloxy Cola") end)
-	addBunker("Teleport to Weapons", teleportWeapons)
+local title = Instance.new("TextLabel", f)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "Broys Script"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = Color3.new(1, 1, 1)
+title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 10)
 
-	local addUni = createSection("Universal", 1)
-	addUni("+Speed", function() h.WalkSpeed = 16 * 3 end)
-	addUni("-Speed", function() h.WalkSpeed = 16 end)
-	addUni("+JumpPower", function() h.JumpPower = 50 * 3 end)
-	addUni("-JumpPower", function() h.JumpPower = 50 end)
-	addUni("Pinwheel Hop", function() spinning = not spinning fovZoom() end)
+-- Кнопка закрытия
+local x = Instance.new("TextButton", f)
+x.Size, x.Position = UDim2.new(0, 30, 0, 30), UDim2.new(1, -35, 0, 5)
+x.Text = "X"
+x.Font = Enum.Font.GothamBold
+x.TextSize = 20
+x.BackgroundColor3 = Color3.new(1, 1, 1)
+x.TextColor3 = Color3.new(0, 0, 0)
+Instance.new("UICorner", x).CornerRadius = UDim.new(0, 8)
+x.MouseButton1Click:Connect(function() g:Destroy() end)
+
+-- Кнопка сворачивания
+local minBtn = Instance.new("TextButton", f)
+minBtn.Size, minBtn.Position = UDim2.new(0, 30, 0, 30), UDim2.new(1, -70, 0, 5)
+minBtn.Text = "-"
+minBtn.Font = Enum.Font.GothamBold
+minBtn.TextSize = 20
+minBtn.BackgroundColor3 = Color3.new(1, 1, 1)
+minBtn.TextColor3 = Color3.new(0, 0, 0)
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 8)
+
+local container = Instance.new("Frame", f)
+container.Position = UDim2.new(0, 0, 0, 40)
+container.Size = UDim2.new(1, 0, 1, -40)
+container.BackgroundTransparency = 1
+
+local layout = Instance.new("UIListLayout", container)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 5)
+
+-- Автообновление высоты
+local function updateSize()
+	task.wait()
+	local h = 40
+	if container.Visible then
+		for _, c in pairs(container:GetChildren()) do
+			if c:IsA("Frame") then h += c.AbsoluteSize.Y + layout.Padding.Offset end
+		end
+	end
+	f:TweenSize(UDim2.new(0, 300, 0, h), "Out", "Quad", 0.2, true)
 end
 
-makeGUI()
+local minimized = false
+minBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	container.Visible = not minimized
+	updateSize()
+end)
+
+-- Раздел
+local function section(name)
+	local sec = Instance.new("Frame", container)
+	sec.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	sec.Size = UDim2.new(1, -10, 0, 30)
+	sec.AutomaticSize = Enum.AutomaticSize.Y
+	sec.ClipsDescendants = true
+
+	local header = Instance.new("TextButton", sec)
+	header.Size = UDim2.new(1, 0, 0, 30)
+	header.Text = name
+	header.Font = Enum.Font.GothamBold
+	header.TextSize = 16
+	header.TextColor3 = Color3.new(1, 1, 1)
+	header.BackgroundTransparency = 1
+
+	local content = Instance.new("Frame", sec)
+	content.Position = UDim2.new(0, 0, 0, 30)
+	content.Size = UDim2.new(1, 0, 0, 0)
+	content.BackgroundTransparency = 1
+	content.ClipsDescendants = true
+
+	local list = Instance.new("UIListLayout", content)
+	list.SortOrder = Enum.SortOrder.LayoutOrder
+	list.Padding = UDim.new(0, 5)
+
+	local open = false
+	header.MouseButton1Click:Connect(function()
+		open = not open
+		local total = 0
+		for _, b in pairs(content:GetChildren()) do
+			if b:IsA("TextButton") then total += 35 end
+		end
+		content:TweenSize(UDim2.new(1, 0, 0, open and total or 0), "Out", "Quad", 0.25, true)
+		task.delay(0.3, updateSize)
+	end)
+
+	local function add(txt, fn)
+		local b = Instance.new("TextButton", content)
+		b.Size = UDim2.new(1, -20, 0, 30)
+		b.Text = txt
+		b.Font = Enum.Font.GothamBold
+		b.TextSize = 16
+		b.TextColor3 = Color3.new(1, 1, 1)
+		b.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		b.AutoButtonColor = false
+		b.MouseEnter:Connect(function() b.BackgroundColor3 = Color3.fromRGB(80, 80, 80) end)
+		b.MouseLeave:Connect(function() b.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end)
+		b.MouseButton1Click:Connect(fn)
+		Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+	end
+
+	content.Parent = sec
+	updateSize()
+	return add
+end
+
+-- Логика
+local char = p.Character or p.CharacterAdded:Wait()
+local h = char:WaitForChild("Humanoid")
+
+local function tpTo(n)
+	local root = char:FindFirstChild("HumanoidRootPart")
+	local best, dist = nil, math.huge
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and v.Name == n then
+			local d = (v.Position - root.Position).Magnitude
+			if d < dist then dist = d best = v end
+		end
+	end
+	if best then root.CFrame = CFrame.new(best.Position + Vector3.new(0,3,0)) end
+end
+
+local function tpWeapons()
+	local r = char:FindFirstChild("HumanoidRootPart")
+	local w = workspace:FindFirstChild("Weapons")
+	if not (w and r) then return end
+	local best, dist = nil, math.huge
+	for _, m in pairs(w:GetChildren()) do
+		if m:IsA("Model") and m.PrimaryPart then
+			local d = (m.PrimaryPart.Position - r.Position).Magnitude
+			if d < dist then dist = d best = m end
+		end
+	end
+	if best then r.CFrame = CFrame.new(best.PrimaryPart.Position + Vector3.new(0,3,0)) end
+end
+
+local spin = false
+game:GetService("RunService").RenderStepped:Connect(function()
+	if spin then
+		local r = char:FindFirstChild("HumanoidRootPart")
+		if r then r.CFrame *= CFrame.Angles(0, math.rad(35), 0) end
+	end
+end)
+
+game:GetService("UserInputService").InputBegan:Connect(function(i, g)
+	if not g and i.KeyCode == Enum.KeyCode.Z then
+		local cam = workspace.CurrentCamera
+		cam.FieldOfView = cam.FieldOfView == 70 and 200 or 70
+	end
+end)
+
+-- Секции с полными названиями
+local bunker = section("Bunker")
+bunker("Teleport to Beans", function() tpTo("Beans") end)
+bunker("Teleport to Bloxy Cola", function() tpTo("Bloxy Cola") end)
+bunker("Teleport to Weapons", tpWeapons)
+
+local utility = section("Universal")
+utility("Increase WalkSpeed", function() h.WalkSpeed = 48 end)
+utility("Reset WalkSpeed", function() h.WalkSpeed = 16 end)
+utility("Increase JumpPower", function() h.JumpPower = 150 end)
+utility("Reset JumpPower", function() h.JumpPower = 50 end)
+utility("Toggle Spin Effect", function() spin = not spin end)
+
 p.CharacterAdded:Connect(function()
 	task.wait(1)
-	makeGUI()
+	script:Clone().Parent = p:WaitForChild("PlayerGui")
 end)
