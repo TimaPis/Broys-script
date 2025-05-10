@@ -2,44 +2,50 @@ local p = game.Players.LocalPlayer
 local g = Instance.new("ScreenGui", p:WaitForChild("PlayerGui"))
 g.Name, g.ResetOnSpawn = "BroysGUI", false
 
-local f = Instance.new("Frame", g)
-f.Size = UDim2.new(0, 300, 0, 100)
-f.Position = UDim2.new(0.5, -150, 0.5, -200)
-f.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Instance.new("UICorner", f).CornerRadius = UDim.new(0, 10)
+local main = Instance.new("Frame", g)
+main.Size = UDim2.new(0, 300, 0, 40)
+main.Position = UDim2.new(0.5, -150, 0.5, -200)
+main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+main.AutomaticSize = Enum.AutomaticSize.Y
+main.ClipsDescendants = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
--- Перетаскивание
+local layout = Instance.new("UIListLayout", main)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 5)
+
 local uis = game:GetService("UserInputService")
 local dragging, dragStart, startPos
-f.InputBegan:Connect(function(i)
+main.InputBegan:Connect(function(i)
 	if i.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = i.Position
-		startPos = f.Position
-		i.Changed:Connect(function()
-			if i.UserInputState == Enum.UserInputState.End then dragging = false end
-		end)
+		dragging = true dragStart = i.Position startPos = main.Position
+		i.Changed:Connect(function() if i.UserInputState == Enum.UserInputState.End then dragging = false end end)
 	end
 end)
 uis.InputChanged:Connect(function(i)
 	if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
 		local delta = i.Position - dragStart
-		f.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
 end)
 
-local title = Instance.new("TextLabel", f)
-title.Size = UDim2.new(1, 0, 0, 30)
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1, 0, 0, 30)
+header.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+header.BackgroundTransparency = 0.2
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
+
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(1, -70, 1, 0)
 title.Text = "Broys Script"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
 title.TextColor3 = Color3.new(1, 1, 1)
-title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Instance.new("UICorner", title).CornerRadius = UDim.new(0, 10)
+title.BackgroundTransparency = 1
+title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Кнопка закрытия
-local x = Instance.new("TextButton", f)
-x.Size, x.Position = UDim2.new(0, 30, 0, 30), UDim2.new(1, -35, 0, 5)
+local x = Instance.new("TextButton", header)
+x.Size, x.Position = UDim2.new(0, 30, 0, 30), UDim2.new(1, -35, 0, 0)
 x.Text = "X"
 x.Font = Enum.Font.GothamBold
 x.TextSize = 20
@@ -48,9 +54,8 @@ x.TextColor3 = Color3.new(0, 0, 0)
 Instance.new("UICorner", x).CornerRadius = UDim.new(0, 8)
 x.MouseButton1Click:Connect(function() g:Destroy() end)
 
--- Кнопка сворачивания
-local minBtn = Instance.new("TextButton", f)
-minBtn.Size, minBtn.Position = UDim2.new(0, 30, 0, 30), UDim2.new(1, -70, 0, 5)
+local minBtn = Instance.new("TextButton", header)
+minBtn.Size, minBtn.Position = UDim2.new(0, 30, 0, 30), UDim2.new(1, -70, 0, 0)
 minBtn.Text = "-"
 minBtn.Font = Enum.Font.GothamBold
 minBtn.TextSize = 20
@@ -58,69 +63,53 @@ minBtn.BackgroundColor3 = Color3.new(1, 1, 1)
 minBtn.TextColor3 = Color3.new(0, 0, 0)
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 8)
 
-local container = Instance.new("Frame", f)
-container.Position = UDim2.new(0, 0, 0, 40)
-container.Size = UDim2.new(1, 0, 1, -40)
+local container = Instance.new("Frame", main)
+container.Size = UDim2.new(1, 0, 0, 0)
+container.AutomaticSize = Enum.AutomaticSize.Y
 container.BackgroundTransparency = 1
-
-local layout = Instance.new("UIListLayout", container)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Padding = UDim.new(0, 5)
-
--- Автообновление высоты
-local function updateSize()
-	task.wait()
-	local h = 40
-	if container.Visible then
-		for _, c in pairs(container:GetChildren()) do
-			if c:IsA("Frame") then h += c.AbsoluteSize.Y + layout.Padding.Offset end
-		end
-	end
-	f:TweenSize(UDim2.new(0, 300, 0, h), "Out", "Quad", 0.2, true)
-end
+local containerLayout = Instance.new("UIListLayout", container)
+containerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+containerLayout.Padding = UDim.new(0, 5)
 
 local minimized = false
 minBtn.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	container.Visible = not minimized
-	updateSize()
 end)
 
--- Раздел
 local function section(name)
 	local sec = Instance.new("Frame", container)
-	sec.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	sec.Size = UDim2.new(1, -10, 0, 30)
 	sec.AutomaticSize = Enum.AutomaticSize.Y
+	sec.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	sec.ClipsDescendants = true
+	Instance.new("UICorner", sec).CornerRadius = UDim.new(0, 10)
 
-	local header = Instance.new("TextButton", sec)
-	header.Size = UDim2.new(1, 0, 0, 30)
-	header.Text = name
-	header.Font = Enum.Font.GothamBold
-	header.TextSize = 16
-	header.TextColor3 = Color3.new(1, 1, 1)
-	header.BackgroundTransparency = 1
+	local title = Instance.new("TextButton", sec)
+	title.Size = UDim2.new(1, 0, 0, 30)
+	title.Text = name
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 16
+	title.TextColor3 = Color3.new(1, 1, 1)
+	title.BackgroundTransparency = 1
 
 	local content = Instance.new("Frame", sec)
 	content.Position = UDim2.new(0, 0, 0, 30)
 	content.Size = UDim2.new(1, 0, 0, 0)
 	content.BackgroundTransparency = 1
 	content.ClipsDescendants = true
-
 	local list = Instance.new("UIListLayout", content)
 	list.SortOrder = Enum.SortOrder.LayoutOrder
 	list.Padding = UDim.new(0, 5)
 
 	local open = false
-	header.MouseButton1Click:Connect(function()
+	title.MouseButton1Click:Connect(function()
 		open = not open
 		local total = 0
 		for _, b in pairs(content:GetChildren()) do
 			if b:IsA("TextButton") then total += 35 end
 		end
 		content:TweenSize(UDim2.new(1, 0, 0, open and total or 0), "Out", "Quad", 0.25, true)
-		task.delay(0.3, updateSize)
 	end)
 
 	local function add(txt, fn)
@@ -132,31 +121,63 @@ local function section(name)
 		b.TextColor3 = Color3.new(1, 1, 1)
 		b.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 		b.AutoButtonColor = false
-		b.MouseEnter:Connect(function() b.BackgroundColor3 = Color3.fromRGB(80, 80, 80) end)
-		b.MouseLeave:Connect(function() b.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end)
-		b.MouseButton1Click:Connect(fn)
 		Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+		b.MouseButton1Click:Connect(fn)
+
+		local t = math.random()
+		local hovering = false
+		local rs = game:GetService("RunService")
+		local pulse = 0
+		local fadeProgress = 0
+		local lastColor = b.BackgroundColor3
+
+		rs.RenderStepped:Connect(function(dt)
+			t += dt * 0.1
+			if hovering then
+				pulse += dt * 1
+				local pulseVal = 0.5 + 0.5 * math.sin(pulse * 2)
+				local color1 = Color3.fromRGB(128, 0, 255)
+				local color2 = Color3.fromRGB(200, 100, 255)
+				local newColor = color1:Lerp(color2, pulseVal)
+				b.BackgroundColor3 = newColor
+				lastColor = newColor
+				fadeProgress = 0
+			else
+				fadeProgress = math.clamp(fadeProgress + dt * 0.5, 0, 1)
+				local val = math.abs(math.sin(t))
+				local baseColor = Color3.new(val * 0.5 + 0.1, val * 0.5 + 0.1, val * 0.5 + 0.1)
+				b.BackgroundColor3 = lastColor:Lerp(baseColor, fadeProgress)
+			end
+		end)
+
+		b.MouseEnter:Connect(function()
+			hovering = true
+			pulse = 0
+		end)
+
+		b.MouseLeave:Connect(function()
+			hovering = false
+			fadeProgress = 0
+		end)
 	end
 
 	content.Parent = sec
-	updateSize()
 	return add
 end
 
--- Логика
 local char = p.Character or p.CharacterAdded:Wait()
 local h = char:WaitForChild("Humanoid")
 
 local function tpTo(n)
-	local root = char:FindFirstChild("HumanoidRootPart")
+	local r = char:FindFirstChild("HumanoidRootPart")
 	local best, dist = nil, math.huge
 	for _, v in pairs(workspace:GetDescendants()) do
 		if v:IsA("BasePart") and v.Name == n then
-			local d = (v.Position - root.Position).Magnitude
-			if d < dist then dist = d best = v end
+			local d = (v.Position - r.Position).Magnitude
+			if d < dist then best, dist = v, d end
 		end
 	end
-	if best then root.CFrame = CFrame.new(best.Position + Vector3.new(0,3,0)) end
+	if best then r.CFrame = CFrame.new(best.Position + Vector3.new(0,3,0)) end
 end
 
 local function tpWeapons()
@@ -167,7 +188,7 @@ local function tpWeapons()
 	for _, m in pairs(w:GetChildren()) do
 		if m:IsA("Model") and m.PrimaryPart then
 			local d = (m.PrimaryPart.Position - r.Position).Magnitude
-			if d < dist then dist = d best = m end
+			if d < dist then best, dist = m, d end
 		end
 	end
 	if best then r.CFrame = CFrame.new(best.PrimaryPart.Position + Vector3.new(0,3,0)) end
@@ -181,14 +202,13 @@ game:GetService("RunService").RenderStepped:Connect(function()
 	end
 end)
 
-game:GetService("UserInputService").InputBegan:Connect(function(i, g)
+uis.InputBegan:Connect(function(i, g)
 	if not g and i.KeyCode == Enum.KeyCode.Z then
 		local cam = workspace.CurrentCamera
 		cam.FieldOfView = cam.FieldOfView == 70 and 200 or 70
 	end
 end)
 
--- Секции с полными названиями
 local bunker = section("Bunker")
 bunker("Teleport to Beans", function() tpTo("Beans") end)
 bunker("Teleport to Bloxy Cola", function() tpTo("Bloxy Cola") end)
@@ -200,8 +220,21 @@ utility("Reset WalkSpeed", function() h.WalkSpeed = 16 end)
 utility("Increase JumpPower", function() h.JumpPower = 150 end)
 utility("Reset JumpPower", function() h.JumpPower = 50 end)
 utility("Toggle Spin Effect", function() spin = not spin end)
+utility("Fly Gui", function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+end)
+
+local t = 0
+game:GetService("RunService").RenderStepped:Connect(function(dt)
+	t += dt * 0.05
+	local val = math.abs(math.sin(t))
+	main.BackgroundColor3 = Color3.new(val, val, val)
+end)
 
 p.CharacterAdded:Connect(function()
 	task.wait(1)
 	script:Clone().Parent = p:WaitForChild("PlayerGui")
 end)
+
+header.Parent = main
+container.Parent = main
