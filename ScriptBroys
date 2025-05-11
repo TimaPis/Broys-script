@@ -76,7 +76,6 @@ minBtn.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	container.Visible = not minimized
 end)
-
 local function section(name)
 	local sec = Instance.new("Frame", container)
 	sec.Size = UDim2.new(1, -10, 0, 30)
@@ -165,6 +164,7 @@ local function section(name)
 	return add
 end
 
+-- Телепорт логика
 local char = p.Character or p.CharacterAdded:Wait()
 local h = char:WaitForChild("Humanoid")
 
@@ -194,6 +194,7 @@ local function tpWeapons()
 	if best then r.CFrame = CFrame.new(best.PrimaryPart.Position + Vector3.new(0,3,0)) end
 end
 
+-- Spin
 local spin = false
 game:GetService("RunService").RenderStepped:Connect(function()
 	if spin then
@@ -209,11 +210,31 @@ uis.InputBegan:Connect(function(i, g)
 	end
 end)
 
+-- 🔻 Секция Bunker с новыми кнопками
 local bunker = section("Bunker")
 bunker("Teleport to Beans", function() tpTo("Beans") end)
 bunker("Teleport to Bloxy Cola", function() tpTo("Bloxy Cola") end)
 bunker("Teleport to Weapons", tpWeapons)
+bunker("Teleport to Bunker", function()
+	local root = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+	if root then
+		root.CFrame = CFrame.new(-3.31620836, 36.9000015, -16.5588989,
+			-0.902830482, 2.5417537e-09, 0.429996669,
+			5.96319749e-09, 1, 6.60936017e-09,
+			-0.429996669, 8.53128679e-09, -0.902830482)
+	end
+end)
+bunker("Teleport to Save Zone", function()
+	local root = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+	if root then
+		root.CFrame = CFrame.new(-190.150757, -21.9491825, 2682.50366,
+			-0.93968761, -7.11933535e-05, -0.342033863,
+			1.0465714e-07, 1, -0.000208434634,
+			0.342033863, -0.000195899236, -0.93968761)
+	end
+end)
 
+-- Остальные разделы
 local utility = section("Universal")
 utility("Increase WalkSpeed", function() h.WalkSpeed = 48 end)
 utility("Reset WalkSpeed", function() h.WalkSpeed = 16 end)
@@ -224,6 +245,7 @@ utility("Fly Gui", function()
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
 end)
 
+-- Перелив фона GUI
 local t = 0
 game:GetService("RunService").RenderStepped:Connect(function(dt)
 	t += dt * 0.05
@@ -231,6 +253,7 @@ game:GetService("RunService").RenderStepped:Connect(function(dt)
 	main.BackgroundColor3 = Color3.new(val, val, val)
 end)
 
+-- Перезагрузка GUI при респавне
 p.CharacterAdded:Connect(function()
 	task.wait(1)
 	script:Clone().Parent = p:WaitForChild("PlayerGui")
