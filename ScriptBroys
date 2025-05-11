@@ -244,6 +244,106 @@ utility("Toggle Spin Effect", function() spin = not spin end)
 utility("Fly Gui", function()
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
 end)
+utility("Aim Bot", function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/sgkRrt3c"))("t.me/ByteScripts")
+end)
+utility("Purple refreshment", function()
+	local Lighting = game:GetService("Lighting")
+
+-- Общая цветовая палитра
+Lighting.Ambient = Color3.fromRGB(80, 0, 100)
+Lighting.OutdoorAmbient = Color3.fromRGB(60, 0, 90)
+Lighting.ColorShift_Top = Color3.fromRGB(50, 0, 80)
+Lighting.ColorShift_Bottom = Color3.fromRGB(30, 0, 60)
+Lighting.FogColor = Color3.fromRGB(80, 0, 120)
+Lighting.FogStart = 50
+Lighting.FogEnd = 300
+
+-- Эффект цветокоррекции
+local colorCorrection = Instance.new("ColorCorrectionEffect")
+colorCorrection.TintColor = Color3.fromRGB(180, 100, 255)
+colorCorrection.Contrast = 0.1
+colorCorrection.Saturation = 0.2
+colorCorrection.Brightness = 0.05
+colorCorrection.Parent = Lighting
+
+-- Эффект атмосферы
+local atmosphere = Instance.new("Atmosphere")
+atmosphere.Density = 0.4
+atmosphere.Offset = 0.3
+atmosphere.Color = Color3.fromRGB(140, 90, 255)
+atmosphere.Decay = Color3.fromRGB(30, 0, 60)
+atmosphere.Glare = 0.2
+atmosphere.Haze = 1
+atmosphere.Parent = Lighting
+end)
+utility("FOV", function()
+    local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+-- Устанавливаем FOV при каждом кадре (на случай, если что-то его сбрасывает)
+RunService.RenderStepped:Connect(function()
+    if camera then
+        camera.FieldOfView = 175
+    end
+end)
+end)
+utility("PlayerHighlight", function()
+    local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local HIGHLIGHT_COLOR = Color3.new(1, 1, 1) -- Белый цвет
+local UPDATE_INTERVAL = 10 -- Интервал в секундах
+
+local function createHighlight(character)
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "PlayerHighlight"
+    highlight.FillColor = HIGHLIGHT_COLOR
+    highlight.OutlineColor = HIGHLIGHT_COLOR
+    highlight.Parent = character
+end
+
+local function onCharacterAdded(character)
+    -- Удаляем старый хайлайт, если он есть
+    local oldHighlight = character:FindFirstChild("PlayerHighlight")
+    if oldHighlight then
+        oldHighlight:Destroy()
+    end
+    
+    -- Создаем новый хайлайт
+    createHighlight(character)
+end
+
+local function onPlayerAdded(player)
+    -- Обрабатываем появление персонажа игрока
+    player.CharacterAdded:Connect(onCharacterAdded)
+    
+    -- Если персонаж уже существует (например, игрок уже в игре)
+    if player.Character then
+        onCharacterAdded(player.Character)
+    end
+end
+
+local function highlightAllPlayers()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            onCharacterAdded(player.Character)
+        end
+    end
+end
+
+-- Подключаем обработчики для новых игроков
+Players.PlayerAdded:Connect(onPlayerAdded)
+
+-- Первоначальное выделение всех игроков
+highlightAllPlayers()
+
+-- Запускаем периодическое обновление
+while true do
+    wait(UPDATE_INTERVAL)
+    highlightAllPlayers()
+end
+end)
 
 -- Перелив фона GUI
 local t = 0
