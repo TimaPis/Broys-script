@@ -447,7 +447,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 end)
-utility("Protection from damage (TELEPORT)", function()
+utility("Protection from damage", function()
 	local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
