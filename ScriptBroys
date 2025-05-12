@@ -344,6 +344,36 @@ while true do
     highlightAllPlayers()
 end
 end)
+utility("GodCore", function()
+	local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function protectHumanoid(humanoid)
+    local healingThreshold = 99 -- ниже этого процента здоровья — моментальное восстановление
+
+    -- Обновление каждый кадр
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if humanoid and humanoid.Health > 0 then
+            local percent = (humanoid.Health / humanoid.MaxHealth) * 100
+            if percent < healingThreshold then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end
+    end)
+end
+
+-- Подключение к новому персонажу
+player.CharacterAdded:Connect(function(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    humanoid.BreakJointsOnDeath = false -- на всякий случай
+    protectHumanoid(humanoid)
+end)
+
+-- Если уже загружен
+if player.Character and player.Character:FindFirstChild("Humanoid") then
+    protectHumanoid(player.Character.Humanoid)
+end
+end)
 
 -- Перелив фона GUI
 local t = 0
