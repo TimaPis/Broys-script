@@ -244,7 +244,7 @@ utility("Toggle Spin Effect", function() spin = not spin end)
 utility("Fly Gui", function()
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
 end)
-utility("Aim Bot", function()
+utility("Aim Bot V1", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/TimaPis/AIM-SCRIPT/refs/heads/main/SCRIPT"))()
 end)
 utility("Purple refreshment", function()
@@ -344,7 +344,7 @@ while true do
     highlightAllPlayers()
 end
 end)
-utility("GodCore", function()
+utility("GodCore(VISUAL)", function()
 	local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
@@ -372,6 +372,161 @@ end)
 -- Если уже загружен
 if player.Character and player.Character:FindFirstChild("Humanoid") then
     protectHumanoid(player.Character.Humanoid)
+end
+end)
+utility("Aim Bot V2", function()
+    local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local aimRange = 200
+local attackDelay = 0.2
+local autoAttack = false
+local lastAttackTime = 0
+
+-- Создание GUI
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "AutoAttackGUI"
+gui.ResetOnSpawn = false
+
+local button = Instance.new("TextButton")
+button.Name = "ToggleButton"
+button.Size = UDim2.new(0, 160, 0, 40)
+button.Position = UDim2.new(0, 200, 0, 100)
+button.BackgroundColor3 = Color3.new(0, 0.5, 0)
+button.TextColor3 = Color3.new(1, 1, 1)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 16
+button.Text = "🔫 AIMBOT V2 BY HAI_BROYS: OFF"
+button.Parent = gui
+button.Active = true
+button.Draggable = true -- 💥 ДВИЖЕНИЕ КНОПКИ
+
+-- Переключение
+button.MouseButton1Click:Connect(function()
+    autoAttack = not autoAttack
+    button.BackgroundColor3 = autoAttack and Color3.new(0.1, 0.7, 0.1) or Color3.new(0.5, 0, 0)
+    button.Text = autoAttack and "🔫 AIMBOT V2 BY HAI_BROYS ON" or "🔫 AIMBOT V2 BY HAI_BROYS: OFF"
+end)
+
+-- Поиск зомби
+local function getClosestZombie()
+    local closest, shortestDist = nil, aimRange
+
+    for _, model in pairs(workspace:GetChildren()) do
+        if model:IsA("Model") and model:FindFirstChild("Humanoid") and model:FindFirstChild("Head") then
+            if model ~= player.Character and model.Humanoid.Health > 0 then
+                local dist = (camera.CFrame.Position - model.Head.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = model.Head
+                end
+            end
+        end
+    end
+
+    return closest
+end
+
+-- Атака по голове
+RunService.Heartbeat:Connect(function()
+    if not autoAttack then return end
+
+    local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
+    if not tool or not tool:FindFirstChild("Handle") then return end
+
+    local target = getClosestZombie()
+    if target then
+        camera.CFrame = CFrame.new(camera.CFrame.Position, target.Position)
+        local t = tick()
+        if t - lastAttackTime >= attackDelay then
+            tool:Activate()
+            lastAttackTime = t
+        end
+    end
+end)
+end)
+utility("Protection from damage (TELEPORT)", function()
+	local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local lastHealth = nil
+local tpDistance = 100 -- метров
+local teleportCooldown = false
+
+-- Создаём GUI
+local function createNotificationGui()
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "TeleportNotifier"
+    gui.ResetOnSpawn = false
+    gui.Parent = player:WaitForChild("PlayerGui")
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Name = "NotifyText"
+    textLabel.Parent = gui
+    textLabel.Size = UDim2.new(1, 0, 0, 50)
+    textLabel.Position = UDim2.new(0, 0, 0, 0)
+    textLabel.BackgroundTransparency = 0.3
+    textLabel.BackgroundColor3 = Color3.new(1, 0, 0)
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.Font = Enum.Font.GothamBlack
+    textLabel.TextScaled = true
+    textLabel.Text = ""
+    textLabel.Visible = false
+end
+
+-- Показать уведомление
+local function showNotification(text, duration)
+    local gui = player:FindFirstChild("PlayerGui"):FindFirstChild("TeleportNotifier")
+    if gui then
+        local label = gui:FindFirstChild("NotifyText")
+        if label then
+            label.Text = text
+            label.Visible = true
+            task.delay(duration, function()
+                label.Visible = false
+            end)
+        end
+    end
+end
+
+local function teleportAway(humanoid)
+    RunService.Heartbeat:Connect(function()
+        if humanoid and humanoid.Health > 0 and not teleportCooldown then
+            local currentHealth = humanoid.Health
+
+            if lastHealth and currentHealth < lastHealth then
+                local rootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    teleportCooldown = true
+                    local forward = rootPart.CFrame.LookVector
+                    rootPart.CFrame = rootPart.CFrame + (forward * tpDistance)
+                    showNotification("‼️ Teleport back due to damage‼️", 4)
+                    task.delay(1, function()
+                        teleportCooldown = false
+                    end)
+                end
+            end
+
+            lastHealth = currentHealth
+        end
+    end)
+end
+
+player.CharacterAdded:Connect(function(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    lastHealth = humanoid.Health
+    createNotificationGui()
+    teleportAway(humanoid)
+end)
+
+if player.Character and player.Character:FindFirstChild("Humanoid") then
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    lastHealth = humanoid.Health
+    createNotificationGui()
+    teleportAway(humanoid)
 end
 end)
 
