@@ -374,77 +374,83 @@ if player.Character and player.Character:FindFirstChild("Humanoid") then
     protectHumanoid(player.Character.Humanoid)
 end
 end)
-utility("Aim Bot V2", function()
+utility("Purple Aura", function()
     local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
-local camera = workspace.CurrentCamera
 
-local aimRange = 200
-local attackDelay = 0.2
-local autoAttack = false
-local lastAttackTime = 0
+local function createAuraOnPart(part)
+	local attachment = Instance.new("Attachment")
+	attachment.Parent = part
 
--- Создание GUI
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "AutoAttackGUI"
-gui.ResetOnSpawn = false
+	-- 1. Магическая аура
+	local aura = Instance.new("ParticleEmitter")
+	aura.Name = "EnergyAura"
+	aura.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(170, 0, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+	}
+	aura.LightEmission = 1
+	aura.Size = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 1.5),
+		NumberSequenceKeypoint.new(1, 2.5)
+	}
+	aura.Transparency = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 0.2),
+		NumberSequenceKeypoint.new(1, 1)
+	}
+	aura.Rate = 40
+	aura.Lifetime = NumberRange.new(0.4, 0.6)
+	aura.Speed = NumberRange.new(0.4, 1)
+	aura.SpreadAngle = Vector2.new(30, 30)
+	aura.Rotation = NumberRange.new(0, 360)
+	aura.RotSpeed = NumberRange.new(-20, 20)
+	aura.LockedToPart = true
+	aura.ZOffset = 0.5
+	aura.EmissionDirection = Enum.NormalId.Top
+	aura.Parent = attachment
 
-local button = Instance.new("TextButton")
-button.Name = "ToggleButton"
-button.Size = UDim2.new(0, 160, 0, 40)
-button.Position = UDim2.new(0, 200, 0, 100)
-button.BackgroundColor3 = Color3.new(0, 0.5, 0)
-button.TextColor3 = Color3.new(1, 1, 1)
-button.Font = Enum.Font.GothamBold
-button.TextSize = 16
-button.Text = "🔫 AIMBOT V2 BY HAI_BROYS: OFF"
-button.Parent = gui
-button.Active = true
-button.Draggable = true -- 💥 ДВИЖЕНИЕ КНОПКИ
-
--- Переключение
-button.MouseButton1Click:Connect(function()
-    autoAttack = not autoAttack
-    button.BackgroundColor3 = autoAttack and Color3.new(0.1, 0.7, 0.1) or Color3.new(0.5, 0, 0)
-    button.Text = autoAttack and "🔫 AIMBOT V2 BY HAI_BROYS ON" or "🔫 AIMBOT V2 BY HAI_BROYS: OFF"
-end)
-
--- Поиск зомби
-local function getClosestZombie()
-    local closest, shortestDist = nil, aimRange
-
-    for _, model in pairs(workspace:GetChildren()) do
-        if model:IsA("Model") and model:FindFirstChild("Humanoid") and model:FindFirstChild("Head") then
-            if model ~= player.Character and model.Humanoid.Health > 0 then
-                local dist = (camera.CFrame.Position - model.Head.Position).Magnitude
-                if dist < shortestDist then
-                    shortestDist = dist
-                    closest = model.Head
-                end
-            end
-        end
-    end
-
-    return closest
+	-- 2. ЭФФЕКТ ФИОЛЕТОВОГО ОГНЯ
+	local flame = Instance.new("ParticleEmitter")
+	flame.Name = "PurpleFlame"
+	flame.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 0, 255))
+	}
+	flame.LightEmission = 1
+	flame.Size = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(1, 1.2)
+	}
+	flame.Transparency = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 0.1),
+		NumberSequenceKeypoint.new(1, 1)
+	}
+	flame.Rate = 60
+	flame.Lifetime = NumberRange.new(0.3, 0.5)
+	flame.Speed = NumberRange.new(1, 2)
+	flame.EmissionDirection = Enum.NormalId.Top
+	flame.LockedToPart = true
+	flame.ZOffset = 1
+	flame.RotSpeed = NumberRange.new(15, 30)
+	flame.SpreadAngle = Vector2.new(15, 15)
+	flame.VelocityInheritance = 0
+	flame.Parent = attachment
 end
 
--- Атака по голове
-RunService.Heartbeat:Connect(function()
-    if not autoAttack then return end
+local function applyAura()
+	local character = player.Character or player.CharacterAdded:Wait()
+	for _, part in pairs(character:GetChildren()) do
+		if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+			createAuraOnPart(part)
+		end
+	end
+end
 
-    local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
-    if not tool or not tool:FindFirstChild("Handle") then return end
+applyAura()
 
-    local target = getClosestZombie()
-    if target then
-        camera.CFrame = CFrame.new(camera.CFrame.Position, target.Position)
-        local t = tick()
-        if t - lastAttackTime >= attackDelay then
-            tool:Activate()
-            lastAttackTime = t
-        end
-    end
+player.CharacterAdded:Connect(function()
+	task.wait(0.1)
+	applyAura()
 end)
 end)
 utility("Protection from damage", function()
